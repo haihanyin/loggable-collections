@@ -10,7 +10,10 @@ class ArrayListTest {
 
     @Test
     public void test() {
-        List<String> list = new ArrayList<>();
+        List<String> list = new ArrayList<>(2);
+        list.add("a");
+        list.add("b");
+        list.add("c");
         System.out.println(list.size());
     }
 

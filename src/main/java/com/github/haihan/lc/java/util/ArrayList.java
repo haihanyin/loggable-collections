@@ -25,6 +25,14 @@
 
 package com.github.haihan.lc.java.util;
 
+import com.github.haihan.lc.support.Logger;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -162,14 +170,21 @@ public class ArrayList<E> extends AbstractList<E>
      *         is negative
      */
     public ArrayList(int initialCapacity) {
+        log.logBlockStart("Enter new ArrayList(initialCapacity=%d)", initialCapacity);
         if (initialCapacity > 0) {
+            log.logTrace("checked that initialCapacity(=%d) > 0", initialCapacity);
+            log.logTrace("elementData = new Object[%d]", initialCapacity);
             this.elementData = new Object[initialCapacity];
         } else if (initialCapacity == 0) {
+            log.logTrace("checked that initialCapacity(%d) == 0", initialCapacity);
+            log.logTrace("elementData = EMPTY_ELEMENTDATA");
             this.elementData = EMPTY_ELEMENTDATA;
         } else {
             throw new IllegalArgumentException("Illegal Capacity: "+
                     initialCapacity);
         }
+        log.logState("new ArrayList(%d)", initialCapacity);
+        log.logBlockEnd(String.format("Exit new ArrayList(int)", initialCapacity));
     }
 
     /**
@@ -177,6 +192,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public ArrayList() {
         this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+        log.logState("new ArrayList()");
     }
 
     /**
@@ -197,6 +213,7 @@ public class ArrayList<E> extends AbstractList<E>
             // replace with empty array.
             this.elementData = EMPTY_ELEMENTDATA;
         }
+        log.logState("new ArrayList(%s)", c.toString());
     }
 
     /**
@@ -211,6 +228,7 @@ public class ArrayList<E> extends AbstractList<E>
                     ? EMPTY_ELEMENTDATA
                     : Arrays.copyOf(elementData, size);
         }
+        log.logState("trimToSize()");
     }
 
     /**
@@ -231,22 +249,32 @@ public class ArrayList<E> extends AbstractList<E>
         if (minCapacity > minExpand) {
             ensureExplicitCapacity(minCapacity);
         }
+        log.logState("ensureCapacity(%d)", minCapacity);
     }
 
     private void ensureCapacityInternal(int minCapacity) {
+        log.logBlockStart("Enter ensureCapacityInternal(minCapacity=%d)", minCapacity);
         if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            log.logTrace("checked that the content is empty {}");
+            log.logTrace("minCapacity = Math.max(DEFAULT_CAPACITY(=%d), minCapacity(=%d))", DEFAULT_CAPACITY, minCapacity);
             minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
         }
 
         ensureExplicitCapacity(minCapacity);
+        log.logBlockEnd("Exit ensureCapacityInternal(int)");
     }
 
     private void ensureExplicitCapacity(int minCapacity) {
+        log.logBlockStart("Enter ensureExplicitCapacity(minCapacity=%d)", minCapacity);
         modCount++;
+        log.logTrace("Increase modCount to %d", modCount);
 
         // overflow-conscious code
-        if (minCapacity - elementData.length > 0)
+        if (minCapacity - elementData.length > 0) {
+            log.logTrace("checked that minCapacity(=%d) - elementData.length(%d) > 0", minCapacity, elementData.length);
             grow(minCapacity);
+        }
+        log.logBlockEnd("Exit ensureExplicitCapacity(int)");
     }
 
     /**
@@ -264,15 +292,26 @@ public class ArrayList<E> extends AbstractList<E>
      * @param minCapacity the desired minimum capacity
      */
     private void grow(int minCapacity) {
+        log.logBlockStart("Enter grow(minCapacity=%d)", minCapacity);
         // overflow-conscious code
         int oldCapacity = elementData.length;
+        log.logTrace("oldCapacity is %d", oldCapacity);
         int newCapacity = oldCapacity + (oldCapacity >> 1);
-        if (newCapacity - minCapacity < 0)
+        log.logTrace("set newCapacity as %d", newCapacity);
+        if (newCapacity - minCapacity < 0) {
+            log.logTrace("checked that newCapacity - minCapacity < 0");
             newCapacity = minCapacity;
-        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            log.logTrace("set newCapacity as minCapacity(=%d)", minCapacity);
+        }
+        if (newCapacity - MAX_ARRAY_SIZE > 0) {
+            log.logTrace("checked that newCapacity - MAX_ARRAY_SIZE(=%d) > 0", MAX_ARRAY_SIZE);
             newCapacity = hugeCapacity(minCapacity);
+            log.logTrace("hugeCapacity(minCapacity)");
+        }
         // minCapacity is usually close to size, so this is a win:
+        log.logTrace("elementData = Arrays.copyOf(elementData, newCapacity)");
         elementData = Arrays.copyOf(elementData, newCapacity);
+        log.logBlockEnd("Exit grow(int)");
     }
 
     private static int hugeCapacity(int minCapacity) {
@@ -469,8 +508,11 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
+        log.logBlockStart("Enter add(e=%s)", e.toString());
         ensureCapacityInternal(size + 1);  // Increments modCount!!
         elementData[size++] = e;
+        log.logBlockEnd("Exit add(E), return %b", e.toString(), true);
+        log.logState("add(%s)", e.toString());
         return true;
     }
 
@@ -1471,4 +1513,31 @@ public class ArrayList<E> extends AbstractList<E>
         }
         modCount++;
     }
+
+    // ===============================================================================
+    private Logger log = new Logger() {
+        @Override
+        protected String printState() {
+            ArrayList targetList = ArrayList.this;
+            StringBuffer sb = new StringBuffer();
+            sb.append(String.format("%s %s\n", "Idx", "Value"));
+            for(int i=0; i<targetList.elementData.length; i++) {
+                if (elementData[i] != null) {
+                    sb.append(String.format("%3d|%s\n", i, firstLine(elementData[i].toString())));
+                } else {
+                    sb.append(String.format("%3d|%s\n", i, "null"));
+                }
+            }
+            return sb.toString();
+        }
+    };
+
+    public void logStart() {
+        log.logStart();
+    }
+
+    public void logEnd() {
+        log.logEnd();
+    }
+
 }
