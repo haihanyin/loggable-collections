@@ -25,14 +25,9 @@
 
 package com.github.haihan.lc.java.util;
 
-import com.github.haihan.lc.support.Logger;
+import com.github.haihan.lc.support.Loggable;
+import com.github.haihan.lc.support.StateChanged;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -126,7 +121,7 @@ import java.util.function.UnaryOperator;
  */
 
 public class ArrayList<E> extends AbstractList<E>
-        implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+        implements List<E>, RandomAccess, Cloneable, java.io.Serializable, Loggable
 {
     private static final long serialVersionUID = 8683452581122892189L;
 
@@ -170,21 +165,14 @@ public class ArrayList<E> extends AbstractList<E>
      *         is negative
      */
     public ArrayList(int initialCapacity) {
-        log.logBlockStart("Enter new ArrayList(initialCapacity=%d)", initialCapacity);
         if (initialCapacity > 0) {
-            log.logTrace("checked that initialCapacity(=%d) > 0", initialCapacity);
-            log.logTrace("elementData = new Object[%d]", initialCapacity);
             this.elementData = new Object[initialCapacity];
         } else if (initialCapacity == 0) {
-            log.logTrace("checked that initialCapacity(%d) == 0", initialCapacity);
-            log.logTrace("elementData = EMPTY_ELEMENTDATA");
             this.elementData = EMPTY_ELEMENTDATA;
         } else {
             throw new IllegalArgumentException("Illegal Capacity: "+
                     initialCapacity);
         }
-        log.logState("new ArrayList(%d)", initialCapacity);
-        log.logBlockEnd(String.format("Exit new ArrayList(int)", initialCapacity));
     }
 
     /**
@@ -192,7 +180,6 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public ArrayList() {
         this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
-        log.logState("new ArrayList()");
     }
 
     /**
@@ -213,7 +200,6 @@ public class ArrayList<E> extends AbstractList<E>
             // replace with empty array.
             this.elementData = EMPTY_ELEMENTDATA;
         }
-        log.logState("new ArrayList(%s)", c.toString());
     }
 
     /**
@@ -221,6 +207,7 @@ public class ArrayList<E> extends AbstractList<E>
      * list's current size.  An application can use this operation to minimize
      * the storage of an <tt>ArrayList</tt> instance.
      */
+    @StateChanged
     public void trimToSize() {
         modCount++;
         if (size < elementData.length) {
@@ -228,7 +215,6 @@ public class ArrayList<E> extends AbstractList<E>
                     ? EMPTY_ELEMENTDATA
                     : Arrays.copyOf(elementData, size);
         }
-        log.logState("trimToSize()");
     }
 
     /**
@@ -238,6 +224,7 @@ public class ArrayList<E> extends AbstractList<E>
      *
      * @param   minCapacity   the desired minimum capacity
      */
+    @StateChanged
     public void ensureCapacity(int minCapacity) {
         int minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)
                 // any size if not default element table
@@ -249,32 +236,22 @@ public class ArrayList<E> extends AbstractList<E>
         if (minCapacity > minExpand) {
             ensureExplicitCapacity(minCapacity);
         }
-        log.logState("ensureCapacity(%d)", minCapacity);
     }
 
     private void ensureCapacityInternal(int minCapacity) {
-        log.logBlockStart("Enter ensureCapacityInternal(minCapacity=%d)", minCapacity);
         if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
-            log.logTrace("checked that the content is empty {}");
-            log.logTrace("minCapacity = Math.max(DEFAULT_CAPACITY(=%d), minCapacity(=%d))", DEFAULT_CAPACITY, minCapacity);
             minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
         }
 
         ensureExplicitCapacity(minCapacity);
-        log.logBlockEnd("Exit ensureCapacityInternal(int)");
     }
 
     private void ensureExplicitCapacity(int minCapacity) {
-        log.logBlockStart("Enter ensureExplicitCapacity(minCapacity=%d)", minCapacity);
         modCount++;
-        log.logTrace("Increase modCount to %d", modCount);
-
         // overflow-conscious code
         if (minCapacity - elementData.length > 0) {
-            log.logTrace("checked that minCapacity(=%d) - elementData.length(%d) > 0", minCapacity, elementData.length);
             grow(minCapacity);
         }
-        log.logBlockEnd("Exit ensureExplicitCapacity(int)");
     }
 
     /**
@@ -292,26 +269,17 @@ public class ArrayList<E> extends AbstractList<E>
      * @param minCapacity the desired minimum capacity
      */
     private void grow(int minCapacity) {
-        log.logBlockStart("Enter grow(minCapacity=%d)", minCapacity);
         // overflow-conscious code
         int oldCapacity = elementData.length;
-        log.logTrace("oldCapacity is %d", oldCapacity);
         int newCapacity = oldCapacity + (oldCapacity >> 1);
-        log.logTrace("set newCapacity as %d", newCapacity);
         if (newCapacity - minCapacity < 0) {
-            log.logTrace("checked that newCapacity - minCapacity < 0");
             newCapacity = minCapacity;
-            log.logTrace("set newCapacity as minCapacity(=%d)", minCapacity);
         }
         if (newCapacity - MAX_ARRAY_SIZE > 0) {
-            log.logTrace("checked that newCapacity - MAX_ARRAY_SIZE(=%d) > 0", MAX_ARRAY_SIZE);
             newCapacity = hugeCapacity(minCapacity);
-            log.logTrace("hugeCapacity(minCapacity)");
         }
         // minCapacity is usually close to size, so this is a win:
-        log.logTrace("elementData = Arrays.copyOf(elementData, newCapacity)");
         elementData = Arrays.copyOf(elementData, newCapacity);
-        log.logBlockEnd("Exit grow(int)");
     }
 
     private static int hugeCapacity(int minCapacity) {
@@ -493,6 +461,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return the element previously at the specified position
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
+    @StateChanged
     public E set(int index, E element) {
         rangeCheck(index);
 
@@ -507,12 +476,10 @@ public class ArrayList<E> extends AbstractList<E>
      * @param e element to be appended to this list
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
+    @StateChanged
     public boolean add(E e) {
-        log.logBlockStart("Enter add(e=%s)", e.toString());
         ensureCapacityInternal(size + 1);  // Increments modCount!!
         elementData[size++] = e;
-        log.logBlockEnd("Exit add(E), return %b", e.toString(), true);
-        log.logState("add(%s)", e.toString());
         return true;
     }
 
@@ -525,6 +492,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @param element element to be inserted
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
+    @StateChanged
     public void add(int index, E element) {
         rangeCheckForAdd(index);
 
@@ -544,6 +512,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return the element that was removed from the list
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
+    @StateChanged
     public E remove(int index) {
         rangeCheck(index);
 
@@ -572,6 +541,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @param o element to be removed from this list, if present
      * @return <tt>true</tt> if this list contained the specified element
      */
+    @StateChanged
     public boolean remove(Object o) {
         if (o == null) {
             for (int index = 0; index < size; index++)
@@ -606,6 +576,7 @@ public class ArrayList<E> extends AbstractList<E>
      * Removes all of the elements from this list.  The list will
      * be empty after this call returns.
      */
+    @StateChanged
     public void clear() {
         modCount++;
 
@@ -629,6 +600,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      */
+    @StateChanged
     public boolean addAll(Collection<? extends E> c) {
         Object[] a = c.toArray();
         int numNew = a.length;
@@ -653,6 +625,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null
      */
+    @StateChanged
     public boolean addAll(int index, Collection<? extends E> c) {
         rangeCheckForAdd(index);
 
@@ -741,6 +714,7 @@ public class ArrayList<E> extends AbstractList<E>
      *         or if the specified collection is null
      * @see Collection#contains(Object)
      */
+    @StateChanged
     public boolean removeAll(Collection<?> c) {
         Objects.requireNonNull(c);
         return batchRemove(c, false);
@@ -762,6 +736,7 @@ public class ArrayList<E> extends AbstractList<E>
      *         or if the specified collection is null
      * @see Collection#contains(Object)
      */
+    @StateChanged
     public boolean retainAll(Collection<?> c) {
         Objects.requireNonNull(c);
         return batchRemove(c, true);
@@ -1445,6 +1420,7 @@ public class ArrayList<E> extends AbstractList<E>
         }
     }
 
+    @StateChanged
     @Override
     public boolean removeIf(Predicate<? super E> filter) {
         Objects.requireNonNull(filter);
@@ -1488,6 +1464,7 @@ public class ArrayList<E> extends AbstractList<E>
         return anyToRemove;
     }
 
+    @StateChanged
     @Override
     @SuppressWarnings("unchecked")
     public void replaceAll(UnaryOperator<E> operator) {
@@ -1503,6 +1480,7 @@ public class ArrayList<E> extends AbstractList<E>
         modCount++;
     }
 
+    @StateChanged
     @Override
     @SuppressWarnings("unchecked")
     public void sort(Comparator<? super E> c) {
@@ -1515,29 +1493,19 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     // ===============================================================================
-    private Logger log = new Logger() {
-        @Override
-        protected String printState() {
-            ArrayList targetList = ArrayList.this;
-            StringBuffer sb = new StringBuffer();
-            sb.append(String.format("%s %s\n", "Idx", "Value"));
-            for(int i=0; i<targetList.elementData.length; i++) {
-                if (elementData[i] != null) {
-                    sb.append(String.format("%3d|%s\n", i, firstLine(elementData[i].toString())));
-                } else {
-                    sb.append(String.format("%3d|%s\n", i, "null"));
-                }
+    @Override
+    public String printState() {
+        ArrayList targetList = ArrayList.this;
+        StringBuffer sb = new StringBuffer();
+        sb.append(String.format("%s %s\n", "Idx", "Value"));
+        for(int i=0; i<targetList.elementData.length; i++) {
+            if (elementData[i] != null) {
+                sb.append(String.format("%3d|%s\n", i, elementData[i].toString()));
+            } else {
+                sb.append(String.format("%3d|%s\n", i, "null"));
             }
-            return sb.toString();
         }
-    };
-
-    public void logStart() {
-        log.logStart();
-    }
-
-    public void logEnd() {
-        log.logEnd();
+        return sb.toString();
     }
 
 }

@@ -1,8 +1,15 @@
 package com.github.haihan.lc.support;
 
-public aspect LoggingAspect {
+import java.io.PrintStream;
 
-    after() : execution(public * com.github.haihan.lc.java.util.ArrayList.*(..)) {
-        System.out.printf("after advice");
+public aspect LoggingAspect {
+    private PrintStream output = System.out;
+
+    after() : execution(@StateChanged * Loggable+.*(..)) || execution(Loggable+.new(..)) {
+        Loggable target = (Loggable) thisJoinPoint.getTarget();
+        String state = target.printState();
+        String signature = thisJoinPoint.getSignature().toLongString();
+        output.println(String.format("===== Executed %s =====", signature));
+        output.println(state);
     }
 }
