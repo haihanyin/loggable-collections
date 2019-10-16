@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class ArrayListTest {
 
     @Test
@@ -14,7 +12,11 @@ class ArrayListTest {
         list.add("a");
         list.add("b");
         list.add("c");
-        System.out.println(list.size());
+        list.add("d");
+        list.add("e");
+        List<String> strings = list.subList(1, 4);
+        strings.forEach(System.out::println);
+
     }
 
 }

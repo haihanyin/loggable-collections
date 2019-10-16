@@ -1038,12 +1038,13 @@ public class ArrayList<E> extends AbstractList<E>
                     ") > toIndex(" + toIndex + ")");
     }
 
-    private class SubList extends AbstractList<E> implements RandomAccess {
+    private class SubList extends AbstractList<E> implements RandomAccess, Loggable {
         private final AbstractList<E> parent;
         private final int parentOffset;
         private final int offset;
         int size;
 
+        @StateChanged
         SubList(AbstractList<E> parent,
                 int offset, int fromIndex, int toIndex) {
             this.parent = parent;
@@ -1266,6 +1267,27 @@ public class ArrayList<E> extends AbstractList<E>
             checkForComodification();
             return new ArrayListSpliterator<E>(ArrayList.this, offset,
                     offset + this.size, this.modCount);
+        }
+
+        @Override
+        public String printState() {
+            StringBuffer sb = new StringBuffer();
+            sb.append(String.format("%s %s\n", "Idx", "Value"));
+            for(int i=0; i<elementData.length; i++) {
+                if (elementData[i] != null) {
+                    sb.append(String.format("%3d|%s", i, elementData[i].toString()));
+                } else {
+                    sb.append(String.format("%3d|%s", i, "null"));
+                }
+                if (i == offset || i == offset+size-1) {
+                    sb.append(" <---\n");
+                } else if ( i > offset && i < offset+size-1){
+                    sb.append("   | \n");
+                } else {
+                    sb.append('\n');
+                }
+            }
+            return sb.toString();
         }
     }
 
@@ -1495,10 +1517,9 @@ public class ArrayList<E> extends AbstractList<E>
     // ===============================================================================
     @Override
     public String printState() {
-        ArrayList targetList = ArrayList.this;
         StringBuffer sb = new StringBuffer();
         sb.append(String.format("%s %s\n", "Idx", "Value"));
-        for(int i=0; i<targetList.elementData.length; i++) {
+        for(int i=0; i<this.elementData.length; i++) {
             if (elementData[i] != null) {
                 sb.append(String.format("%3d|%s\n", i, elementData[i].toString()));
             } else {
